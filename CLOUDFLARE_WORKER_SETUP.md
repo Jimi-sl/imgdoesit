@@ -1,8 +1,11 @@
 # Cloudflare Worker Setup Guide
 
 ## What This Does
-Intercepts blog post page requests and injects the correct title and description 
-into meta tags so Twitter, Facebook, and LinkedIn show proper previews when shared.
+1. Intercepts blog post page requests and injects the correct title and description
+   into meta tags so Twitter, Facebook, and LinkedIn show proper previews when shared.
+2. Proxies comment submissions to Contentful's Management API, so the write-capable
+   management token lives only as an encrypted Worker secret and is never shipped to
+   the browser.
 
 ## Setup Steps
 
@@ -23,20 +26,35 @@ into meta tags so Twitter, Facebook, and LinkedIn show proper previews when shar
 - Copy and paste the entire contents of `cloudflare-worker.js` into the editor
 - Click **"Save and Deploy"**
 
-### 4. Add the Route
+### 4. Add the Routes
 - Go back to your domain dashboard
 - Click **"Workers Routes"** (under Workers & Pages)
 - Click **"Add Route"**
 - Route: `*imgdoesit.com/blog-post.html*`
 - Worker: Select `imgdoesit-blog-meta`
 - Click **"Save"**
+- Click **"Add Route"** again
+- Route: `*imgdoesit.com/api/comments*`
+- Worker: Select `imgdoesit-blog-meta`
+- Click **"Save"**
 
-### 5. Test It
+### 5. Add the Management Token as a Secret
+- Open the `imgdoesit-blog-meta` Worker
+- Go to **Settings > Variables**
+- Under "Environment Variables", click **"Add variable"**
+- Name: `CONTENTFUL_MANAGEMENT_TOKEN`
+- Value: paste your **new, rotated** Contentful management token (never the old leaked one)
+- Click the **encrypt** toggle before saving, so it's stored as a secret, not plaintext
+- Click **"Save and Deploy"**
+
+### 6. Test It
 - Open a blog post URL in your browser (should work as normal)
 - Test social sharing preview:
   - Twitter: https://cards-dev.twitter.com/validator
   - Facebook: https://developers.facebook.com/tools/debug/
   - LinkedIn: https://www.linkedin.com/post-inspector/
+- Test commenting: open a blog post, submit a comment, confirm it shows "will appear
+  once approved" and then check the new entry appears in Contentful (draft/pending)
 
 ## How It Works
 1. Someone shares a blog post link on social media

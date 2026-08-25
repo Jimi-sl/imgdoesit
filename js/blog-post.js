@@ -1,8 +1,9 @@
 // Contentful Configuration
 const CONTENTFUL_SPACE_ID = 'xdddd10ff6v5'; // Replace with your Contentful Space ID
 const CONTENTFUL_ACCESS_TOKEN = 'wz4K0E8_IdR2Gb0j9QkQS9txumikzNc5lY2TzUQHHtk'; // Replace with your Contentful Access Token
-const CONTENTFUL_MANAGEMENT_TOKEN = 'REVOKED_ROTATE_AND_REPLACE'; // This must never be a real token committed to a public repo — see note in git history / PR
-const COMMENT_CONTENT_TYPE = 'comment';
+// Comment submission no longer talks to Contentful's Management API directly from here -
+// it posts to the Cloudflare Worker's /api/comments route instead, which holds the
+// write-capable management token server-side. See cloudflare-worker.js.
 
 // Get post ID from URL
 function getPostIdFromUrl() {
@@ -180,24 +181,11 @@ async function submitComment() {
     status.textContent = '';
 
     try {
-        const response = await fetch(
-            `https://api.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/environments/master/entries`,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${CONTENTFUL_MANAGEMENT_TOKEN}`,
-                    'Content-Type': 'application/vnd.contentful.management.v1+json',
-                    'X-Contentful-Content-Type': COMMENT_CONTENT_TYPE
-                },
-                body: JSON.stringify({
-                    fields: {
-                        name: { 'en-US': name },
-                        body: { 'en-US': body },
-                        postId: { 'en-US': postId }
-                    }
-                })
-            }
-        );
+        const response = await fetch('/api/comments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, body, postId })
+        });
 
         if (response.ok) {
             status.textContent = 'Comment submitted! It will appear once approved.';

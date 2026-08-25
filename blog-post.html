@@ -1,0 +1,108 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Blog Post - ImgDoesIt</title>
+        <meta name="description" content="Read this article from ImgDoesIt about software development, technology, and IT solutions.">
+        <meta name="keywords" content="tech article, software development, IT insights, technology, ImgDoesIt">
+        <meta name="author" content="ImgDoesIt">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="article">
+        <meta property="og:url" content="https://www.imgdoesit.com/blog-post.html">
+        <meta property="og:title" content="Blog Post - ImgDoesIt">
+        <meta property="og:description" content="Read this article from ImgDoesIt about software development, technology, and IT solutions.">
+        <meta property="og:image" content="https://www.imgdoesit.com/img/sun.jpeg">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://www.imgdoesit.com/blog-post.html">
+        <meta property="twitter:title" content="Blog Post - ImgDoesIt">
+        <meta property="twitter:description" content="Read this article from ImgDoesIt about software development, technology, and IT solutions.">
+        <meta property="twitter:image" content="https://www.imgdoesit.com/img/sun.jpeg">
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="https://www.imgdoesit.com/blog-post.html">
+        
+        <link rel="stylesheet" href="css/index.css"/>
+        <link rel="stylesheet" href="css/blog.css"/>
+        <script>
+            function todayDate(){
+               var d = new Date();
+               var n = d.getFullYear() + "  ";
+               return document.getElementById("date").innerHTML = n;
+             }
+        </script>
+    </head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2QRN01CDHN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2QRN01CDHN');
+    </script>
+    <body onload=todayDate()>
+        <div id="blog-post">
+            <div class="header-nav sticky" id="navbar">
+                <h1><a href="index.html">ImgDoes<span>It</span></a></h1>
+                <button onclick=openNav()>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div id="mob-nav">
+                    <ul>
+                        <li><button onclick=closeNav()>&#10005;</button></li>
+                        <li><a href="index.html#home" onclick=closeNav()>Home</a></li>
+                        <li><a href="index.html#about" onclick=closeNav()>About</a></li>
+                        <li><a href="index.html#products" onclick=closeNav()>Products</a></li>
+                        <li><a href="blog.html" class="active" onclick=closeNav()>Blog</a></li>
+                        <li><a href="index.html#contacts" onclick=closeNav()>Contact</a></li>
+                    </ul>    
+                </div>
+                <ul>
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#products">Products</a></li>
+                    <li><a href="blog.html" class="active">Blog</a></li>
+                    <li><a href="index.html#contacts">Contact</a></li>
+                </ul>
+            </div>
+            
+            <div id="blog-post-content" class="entry">
+                <p>Loading post...</p>
+            </div>
+            <div id="comments-section">
+                <h2>Comments</h2>
+                <div id="comment-form">
+                    <input type="text" id="comment-name" placeholder="Your name" maxlength="50" />
+                    <textarea id="comment-body" placeholder="Write a comment..." maxlength="500"></textarea>
+                    <button id="comment-submit" onclick="submitComment()">Post Comment</button>
+                    <p id="comment-status"></p>
+                </div>
+                <div id="comments-list">
+                    <p>Loading comments...</p>
+                </div>
+            </div>
+            <a href="blog.html" class="back-to-blog">← Back to Blog</a>
+        </div>
+
+        <div id="footer">
+            <p>&copy; <span id="date"></span> ImgDoesIt</p>
+        </div>
+
+        <script src="js/blog-post.js"></script>
+        <script>
+            function openNav(){
+                var mobNav = document.getElementById("mob-nav");
+                mobNav.style.display = "block";
+            }
+
+            function closeNav(){
+                var mobNav = document.getElementById("mob-nav");
+                mobNav.style.display = "none";
+            }
+        </script>
+    </body>
+</html>

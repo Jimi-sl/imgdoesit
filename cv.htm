@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Jimi Sule — Senior Full Stack Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #0D1B2A;
+    --navy2:  #172637;
+    --navy3:  #1E3248;
+    --cyan:   #00C8FF;
+    --cyan2:  #0099CC;
+    --slate:  #8899AA;
+    --light:  #C8D8E8;
+    --paper:  #F0EDE6;
+    --white:  #FFFFFF;
+    --ink:    #1A1A2E;
+  }
+
+  html { font-size: 13px; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 1020px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 1100px;
+    box-shadow: 0 20px 60px rgba(13,27,42,0.25);
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    background: var(--navy);
+    padding: 2.8rem 1.8rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* geometric circuit accent */
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border: 1.5px solid rgba(0,200,255,0.12);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .sidebar::after {
+    content: '';
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 60px; height: 60px;
+    border: 1.5px solid rgba(0,200,255,0.2);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* ─── NAME BLOCK ─── */
+  .identity {
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.85rem;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    color: var(--white);
+    text-transform: uppercase;
+  }
+
+  .name-accent {
+    display: block;
+    color: var(--cyan);
+  }
+
+  .title-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-top: 0.55rem;
+    margin-bottom: 1rem;
+  }
+
+  .cyan-rule {
+    width: 36px;
+    height: 2px;
+    background: var(--cyan);
+    margin-bottom: 1.2rem;
+  }
+
+  .contact-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .contact-list li {
+    font-size: 0.78rem;
+    color: var(--light);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    line-height: 1.4;
+  }
+
+  .contact-list li .icon {
+    color: var(--cyan);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+  }
+
+  .contact-list a { color: var(--light); text-decoration: none; }
+  .contact-list a:hover { color: var(--cyan); }
+
+  /* ─── SIDEBAR SECTIONS ─── */
+  .s-section {
+    margin-top: 1.8rem;
+  }
+
+  .s-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .s-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(0,200,255,0.2);
+  }
+
+  /* Tags / chips */
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--light);
+    background: var(--navy2);
+    border: 1px solid rgba(136,153,170,0.25);
+    border-radius: 3px;
+    padding: 0.2rem 0.45rem;
+    line-height: 1.5;
+  }
+
+  .tag.cyan { color: var(--cyan); border-color: rgba(0,200,255,0.3); }
+
+  /* Skills grouped list */
+  .skill-group {
+    margin-bottom: 0.9rem;
+  }
+
+  .skill-cat {
+    font-size: 0.67rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-bottom: 0.3rem;
+  }
+
+  .skill-items {
+    font-size: 0.74rem;
+    color: var(--light);
+    line-height: 1.55;
+  }
+
+  /* Education */
+  .edu-degree {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.4;
+  }
+
+  .edu-school {
+    font-size: 0.73rem;
+    color: var(--slate);
+    margin-top: 0.15rem;
+  }
+
+  .edu-cert {
+    font-size: 0.7rem;
+    color: var(--light);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+    padding-left: 0.8rem;
+    border-left: 1px solid rgba(0,200,255,0.25);
+  }
+
+  /* Additional */
+  .meta-item {
+    font-size: 0.74rem;
+    color: var(--light);
+    margin-bottom: 0.3rem;
+    line-height: 1.4;
+  }
+
+  .meta-item strong {
+    color: var(--slate);
+    font-weight: 600;
+    margin-right: 0.3rem;
+  }
+
+  /* ─── MAIN ─── */
+  .main {
+    background: var(--white);
+    padding: 2.8rem 2.2rem 2rem 2.2rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Profile */
+  .profile-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #E8E4DC;
+  }
+
+  .m-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--navy3);
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .m-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #DDD9D0;
+  }
+
+  .profile-text {
+    font-size: 0.82rem;
+    color: #3A3A4A;
+    line-height: 1.7;
+    font-weight: 400;
+  }
+
+  /* Experience */
+  .exp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .exp-item {
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    gap: 0 1rem;
+    padding-bottom: 1.4rem;
+    position: relative;
+  }
+
+  /* timeline line */
+  .exp-item:not(:last-child) .tl-line {
+    position: absolute;
+    left: 4px;
+    top: 18px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(0,200,255,0.5), rgba(0,200,255,0.05));
+  }
+
+  .tl-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cyan);
+    flex-shrink: 0;
+    margin-top: 5px;
+    box-shadow: 0 0 8px rgba(0,200,255,0.5);
+    z-index: 1;
+    position: relative;
+  }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.1rem;
+    gap: 0.5rem;
+  }
+
+  .exp-role {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.3;
+  }
+
+  .exp-company {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--cyan2);
+    margin-top: 0.1rem;
+  }
+
+  .exp-dates {
+    font-size: 0.68rem;
+    color: var(--slate);
+    white-space: nowrap;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+  }
+
+  .exp-bullets {
+    list-style: none;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .exp-bullets li {
+    font-size: 0.75rem;
+    color: #3A3A4A;
+    line-height: 1.55;
+    padding-left: 0.9rem;
+    position: relative;
+  }
+
+  .exp-bullets li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--cyan2);
+    font-size: 0.65rem;
+    top: 0.05rem;
+  }
+
+  .exp-tech {
+    margin-top: 0.45rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+  }
+
+  .tech-chip {
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--navy3);
+    background: #EEF4FA;
+    border: 1px solid #CCDDE8;
+    border-radius: 2px;
+    padding: 0.15rem 0.4rem;
+  }
+
+  /* Previous roles compact */
+  .prev-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.6rem;
+    margin-top: 0.7rem;
+  }
+
+  .prev-card {
+    background: #F8F6F0;
+    border: 1px solid #E8E4DC;
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .prev-role {
+    font-size: 0.73rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.3;
+  }
+
+  .prev-company {
+    font-size: 0.68rem;
+    color: var(--cyan2);
+    margin-top: 0.1rem;
+    font-weight: 600;
+  }
+
+  .prev-year {
+    font-size: 0.63rem;
+    color: var(--slate);
+    margin-top: 0.1rem;
+  }
+
+  .prev-note {
+    font-size: 0.67rem;
+    color: #555565;
+    margin-top: 0.3rem;
+    line-height: 1.45;
+  }
+
+  @media print {
+    body { padding: 0; background: white; }
+    .page { box-shadow: none; max-width: 100%; }
+  }
+
+  @media (max-width: 700px) {
+    .page { grid-template-columns: 1fr; }
+    .sidebar { padding: 2rem 1.4rem; }
+    .prev-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar">
+
+    <div class="identity">
+      <h1 class="name">
+        Jimi<br>
+        <span class="name-accent">Sule</span>
+      </h1>
+      <p class="title-tag">Senior Full Stack Engineer &amp; Technical Lead</p>
+      <div class="cyan-rule"></div>
+      <ul class="contact-list">
+        <li><span class="icon">◎</span>London, United Kingdom</li>
+        <li><span class="icon">◎</span><a href="tel:+447495309897">+44 7495 309897</a></li>
+        <li><span class="icon">◎</span><a href="mailto:jimi_sl@yahoo.co.uk">jimi_sl@yahoo.co.uk</a></li>
+        <li><span class="icon">◎</span><a href="https://www.imgdoesit.com" target="_blank">imgdoesit.com</a></li>
+        <li><span class="icon">◎</span><a href="https://linkedin.com/in/jimisule" target="_blank">linkedin/jimisule</a></li>
+      </ul>
+    </div>
+
+    <!-- TECHNOLOGIES -->
+    <div class="s-section">
+      <div class="s-label">Core Stack</div>
+      <div class="skill-group">
+        <div class="skill-cat">Languages</div>
+        <div class="skill-items">JavaScript, TypeScript, C#, PHP, Java</div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-cat">Frontend</div>
+        <div class="skill-items">React, Next.js, React Native, AngularJS, HTML5, CSS3</div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-cat">Backend</div>
+        <div class="skill-items">Node.js, Express.js, .NET Core, Laravel, REST APIs, Microservices</div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-cat">Data</div>
+        <div class="skill-items">MongoDB, PostgreSQL, MySQL, Entity Framework</div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-cat">Cloud &amp; DevOps</div>
+        <div class="skill-items">AWS, Azure, Docker, CI/CD, Git</div>
+      </div>
+      <div class="skill-group">
+        <div class="skill-cat">AI &amp; APIs</div>
+        <div class="skill-items">OpenAI APIs, LLM Integration, Amazon SP-API, Amazon Ads API</div>
+      </div>
+    </div>
+
+    <!-- LEADERSHIP -->
+    <div class="s-section">
+      <div class="s-label">Leadership</div>
+      <div class="tag-cloud">
+        <span class="tag cyan">Agile / Scrum</span>
+        <span class="tag">System Design</span>
+        <span class="tag">Software Architecture</span>
+        <span class="tag">Team Mentoring</span>
+        <span class="tag">SDLC</span>
+        <span class="tag">Product Strategy</span>
+      </div>
+    </div>
+
+    <!-- EDUCATION -->
+    <div class="s-section">
+      <div class="s-label">Education</div>
+      <div class="edu-degree">BSc Computer Science (2:1)</div>
+      <div class="edu-school">Birmingham City University</div>
+      <div class="edu-cert">
+        Web Component Development — Java Technologies (NIIT)<br>
+        Creative Publication (NIIT)
+      </div>
+    </div>
+
+    <!-- ADDITIONAL -->
+    <div class="s-section">
+      <div class="s-label">Additional</div>
+      <div class="meta-item"><strong>Work Rights:</strong>Eligible to work in the UK</div>
+      <div class="meta-item"><strong>Languages:</strong>English · Basic Yoruba · Basic French</div>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <main class="main">
+
+    <!-- PROFILE -->
+    <section class="profile-section">
+      <div class="m-label">Profile</div>
+      <p class="profile-text">
+        Founder, CTO, and Senior Full Stack Engineer with 10+ years building SaaS, fintech, mobile, e-commerce, and AI-powered products end-to-end. Experienced in leading engineering teams, architecting scalable systems, and integrating LLM-driven features across React, Node.js, .NET Core, and cloud platforms. Comfortable operating at board level one day and deep in the codebase the next.
+      </p>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section>
+      <div class="m-label">Experience</div>
+      <div class="exp-list">
+
+        <!-- LeadCap -->
+        <div class="exp-item">
+          <div>
+            <div class="tl-dot"></div>
+            <div class="tl-line"></div>
+          </div>
+          <div>
+            <div class="exp-header">
+              <div>
+                <div class="exp-role">Founder &amp; CEO</div>
+                <div class="exp-company">LeadCap.Guru</div>
+              </div>
+              <div class="exp-dates">2025 — Present</div>
+            </div>
+            <ul class="exp-bullets">
+              <li>Founded and lead development of an AI-powered marketing intelligence platform for agencies and brands.</li>
+              <li>Architected scalable SaaS infrastructure on AWS; designed AI insight-generation workflows using LLMs.</li>
+              <li>Built data ingestion pipelines integrating third-party marketing and e-commerce APIs.</li>
+              <li>Owns full product lifecycle: strategy, engineering, deployment, and launch.</li>
+            </ul>
+            <div class="exp-tech">
+              <span class="tech-chip">React</span><span class="tech-chip">Node.js</span><span class="tech-chip">TypeScript</span><span class="tech-chip">MongoDB</span><span class="tech-chip">OpenAI APIs</span><span class="tech-chip">AWS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Buntu -->
+        <div class="exp-item">
+          <div>
+            <div class="tl-dot"></div>
+            <div class="tl-line"></div>
+          </div>
+          <div>
+            <div class="exp-header">
+              <div>
+                <div class="exp-role">CTO &amp; Co-Founder</div>
+                <div class="exp-company">Buntu (formerly STEP)</div>
+              </div>
+              <div class="exp-dates">Jun 2023 — Mar 2025</div>
+            </div>
+            <ul class="exp-bullets">
+              <li>Led engineering strategy, software architecture, and product delivery across multiple product lines.</li>
+              <li>Built backend services with .NET Core, Entity Framework, and PostgreSQL; managed full SDLC.</li>
+              <li>Mentored engineers and established development best practices across the team.</li>
+              <li>Collaborated directly with business stakeholders to align technical delivery with company goals.</li>
+            </ul>
+            <div class="exp-tech">
+              <span class="tech-chip">.NET Core</span><span class="tech-chip">PostgreSQL</span><span class="tech-chip">Entity Framework</span><span class="tech-chip">Flutter</span><span class="tech-chip">Dart</span><span class="tech-chip">Agile</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ImgDoesIt -->
+        <div class="exp-item">
+          <div>
+            <div class="tl-dot"></div>
+            <div class="tl-line"></div>
+          </div>
+          <div>
+            <div class="exp-header">
+              <div>
+                <div class="exp-role">Founder &amp; Software Engineer</div>
+                <div class="exp-company">ImgDoesIt Ltd</div>
+              </div>
+              <div class="exp-dates">Jun 2012 — Present</div>
+            </div>
+            <ul class="exp-bullets">
+              <li>Founded and operated a software consultancy delivering full-stack web and mobile products across fintech, social media, and e-commerce.</li>
+              <li>Built a cryptocurrency exchange platform using React Native and .NET Core.</li>
+              <li>Developed a social media platform with React Native, Node.js, MongoDB, and Mongoose.</li>
+              <li>Deployed cloud-hosted, server-side rendered applications across AWS and Azure.</li>
+            </ul>
+            <div class="exp-tech">
+              <span class="tech-chip">React</span><span class="tech-chip">React Native</span><span class="tech-chip">Node.js</span><span class="tech-chip">TypeScript</span><span class="tech-chip">Laravel</span><span class="tech-chip">.NET Core</span><span class="tech-chip">MongoDB</span><span class="tech-chip">AWS</span><span class="tech-chip">Azure</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PREVIOUS ROLES -->
+    <section style="margin-top: 0.2rem;">
+      <div class="m-label">Earlier Roles</div>
+      <div class="prev-grid">
+        <div class="prev-card">
+          <div class="prev-role">Software Engineer</div>
+          <div class="prev-company">Creditsafe</div>
+          <div class="prev-year">2022</div>
+          <div class="prev-note">React / TypeScript features and C# .NET 6 APIs for enterprise applications.</div>
+        </div>
+        <div class="prev-card">
+          <div class="prev-role">Full Stack Developer</div>
+          <div class="prev-company">Lerex Technology</div>
+          <div class="prev-year">2021 – 2022</div>
+          <div class="prev-note">AngularJS, .NET MVC, .NET Core, and SQL application development.</div>
+        </div>
+        <div class="prev-card">
+          <div class="prev-role">Software Engineer</div>
+          <div class="prev-company">Africa Business Intelligence</div>
+          <div class="prev-year">2019 – 2020</div>
+          <div class="prev-note">Payment services in .NET Core; React Native mobile apps; USSD and payment API integrations.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+</body>
+</html>

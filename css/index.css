@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Candal&family=Outfit:wght@600;900&family=Questrial&display=swap');
+*{margin: 0px; padding: 0px;}
+html {scroll-behavior: smooth;}
+body > div{height: 100vh;box-sizing: border-box;}
+#home{background-image: url("../img/sun.jpeg"); background-position: center; background-repeat: no-repeat;background-size: cover;overflow:hidden;display: flex;flex-direction: column;}
+h1{letter-spacing: 0.8px;font-family: 'Candal', sans-serif;}
+h1 > a{text-decoration: none;color: black;text-shadow: 1px 1px 3px rgba(255,255,255,0.4);}
+h1 > a > span{color: white;border-bottom: 4px solid gold;}
+.header-nav{display: flex;flex-direction: row;align-items: center;justify-content: space-between;background-color: rgba(185,185,185,0);}
+.header-nav > h1{padding: 16px 0px 16px 36px;}
+.header-nav > ul{padding: 16px 36px 16px 0px;}
+.header-nav > button{background-color: gold;border: none;padding: 8px;margin:  16px 36px 16px 0px;display: none;flex-direction: column;justify-content: space-between;height: 36px;width: 36px;}
+.header-nav > button > span{display: block; border-bottom: 4px solid white;width: 100%;}
+.sticky {position: fixed;top: 0;width: 100%;background-color: rgba(106, 122, 137, 0.7);transition: 0.5s;z-index: 100;}
+#mob-nav{display: none;position: fixed;background-color: rgba(106, 122, 137, 0.7);width: 100vw;top: 0px;bottom: 0px;z-index: 100;}
+#mob-nav > ul{background-color: rgba(106, 122, 137, 1);height: 100vh;margin-left: 50vw;}
+#mob-nav > ul > li{display: block;font-family: 'Outfit', sans-serif;font-weight: 600;}
+#mob-nav > ul > li:nth-of-type(1){text-align: right;padding: 24px;}
+#mob-nav > ul > li > button{background-color: rgba(0, 0, 0, 0);border: none; color: white;font-size: 24px; font-weight: bold;}
+.header-nav ul{list-style-type: none;}
+.header-nav ul li{display: inline-block;padding: 8px 12px;font-family: 'Outfit', sans-serif;font-weight: 600;}
+.header-nav ul li a{color: white;}
+.header-nav ul li a:hover{color: black;cursor: pointer;}
+.header-nav ul li a.active{color: gold;}
+#doesitfor ul{margin-top: 36px;position: relative;max-width: 300px;}
+.mySlides {display: none;}
+#doesitfor ul > li{display: block;list-style-type: none;font-family: 'Candal', sans-serif;color: white;font-size: 36px; letter-spacing: 0.8px;background-color: gold;text-align: center;padding: 4px 8px;}
+#home  h2{margin-top: 16px; letter-spacing: 0.8px;color: #6a7a89;text-align: center;font-family: 'Outfit', sans-serif;font-weight: 900;text-shadow: 1px 1px 3px rgba(0,0,0,0.3);}
+#about{display: flex;flex-direction: column;justify-content: flex-start;align-items: flex-start;background-color: white;}
+#about,#products,#contacts{padding: 96px 36px;}
+#about > h2,#products > h2,#contacts > h2{margin-bottom: 24px;color: white; background-color: gold;padding: 8px 12px;letter-spacing: 0.8px;display: inline-block;font-family: 'Candal', sans-serif;}
+#about > div{flex: 1;display: flex;align-items: center;}
+#about > div > p{letter-spacing: 0.8px;line-height: 30px;font-family: 'Questrial', sans-serif}
+#products{display: flex;flex-direction: column;justify-content: flex-start;align-items: flex-start;background-color: #6a7a89;}
+#doesitfor{border: 1px solid white; flex: 1;margin: 0px 36px 36px 36px;padding: 16px;display: flex;justify-content: center;flex-direction: column;align-items: center;}
+#products > div{display: flex;flex-direction: row;justify-content: center;width: 100%;align-items: center;flex: 1;gap: 32px;}
+#products > div > div{width: 250px; border: 1px solid white;flex: 0 0 auto;}
+#products > div > div:nth-of-type(1){border-left: 1px solid white;}
+#products h3{color: #6a7a89;padding: 18px 24px;background-color: white;letter-spacing: 0.5px;font-family: 'Candal', sans-serif;}
+#products a{text-decoration: none;}
+#products p{color: black; padding: 24px;font-size: 14px;letter-spacing: 0.8px;font-family: 'Questrial', sans-serif}
+#products label{display: block;color: white;text-align: right;padding: 12px; border-top: 1px solid white; font-size: 12px;letter-spacing: 0.8px;font-family: 'Questrial', sans-serif}
+form{display: flex;flex-direction: column;align-items: center;margin-top: 48px;}
+#comment{padding: 10px 16px;margin-bottom: 12px;}
+#submit{background: #7b3030;color: white;border: none;padding: 8px 12px;}
+#contacts{background-color: white;display: flex;align-items: flex-start;justify-content: flex-start;flex-direction: column;}
+#contacts > div{width: 100%;flex: 1;display: flex;flex-direction: column;justify-content: center;}
+#contacts > div > p{margin-bottom: 18px;font-family: 'Questrial', sans-serif}
+#footer{height: auto;background-color: white;}
+#footer > p {text-align: center;font-size: 12px; letter-spacing: 0.8px;font-family: 'Questrial', sans-serif}
+li > a{text-decoration: none;}
+li > a:hover{color: white;}
+.email, .phone{display: flex;align-items: center;font-size: 14px; letter-spacing: 0.5px;font-family: 'Questrial', sans-serif}
+.email{margin-bottom: 8px;}
+div > img{width: 32px;margin-right: 12px;}
+#doesitfor, #about-body, #products-body, #contacts-body{opacity: 0;}
+
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: white;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #6a7a89;
+  border: 1px solid white;
+}
+
+/* Fading animation */
+.fade {
+    animation-name: fade;
+    animation-duration: 1s;
+  }
+  
+  @keyframes fade {
+    from {opacity: .4} 
+    to {opacity: 1}
+  }
+
+  .entry {
+    animation-name: entry;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-delay: 0.5s;
+  }
+  
+  @keyframes entry {
+    from {transform: translateY(50px);opacity: 0;} 
+    to {transform: translateY(0px);opacity: 1;}
+  }
+
+  @media only screen and (max-width: 1288px) {
+    #products > div{justify-content: flex-start;flex-wrap: nowrap;overflow-x: scroll;}
+    
+  }
+
+@media only screen and (max-width: 600px) {
+   .header-nav > button{display: flex;}
+    #navbar > ul{display: none;position: absolute;bottom: -100%;right:0px;background-color: rgba(185,185,185,0.5);}
+    #navbar > ul.show{display: flex;flex-direction: column;}
+    #products > div{justify-content: flex-start;flex-direction: column;overflow-x: hidden;overflow-y: scroll;}
+
+}

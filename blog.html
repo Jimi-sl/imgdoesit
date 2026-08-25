@@ -1,0 +1,102 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Blog - ImgDoesIt | Tech Insights & Software Development</title>
+        <meta name="description" content="Read the latest insights on software development, technology trends, and IT solutions from ImgDoesIt. Stay updated with our blog posts.">
+        <meta name="keywords" content="tech blog, software development blog, IT insights, technology articles, ImgDoesIt blog">
+        <meta name="author" content="ImgDoesIt">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://www.imgdoesit.com/blog.html">
+        <meta property="og:title" content="Blog - ImgDoesIt | Tech Insights & Software Development">
+        <meta property="og:description" content="Read the latest insights on software development, technology trends, and IT solutions from ImgDoesIt.">
+        <meta property="og:image" content="https://www.imgdoesit.com/img/sun.jpeg">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://www.imgdoesit.com/blog.html">
+        <meta property="twitter:title" content="Blog - ImgDoesIt | Tech Insights & Software Development">
+        <meta property="twitter:description" content="Read the latest insights on software development, technology trends, and IT solutions from ImgDoesIt.">
+        <meta property="twitter:image" content="https://www.imgdoesit.com/img/sun.jpeg">
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="https://www.imgdoesit.com/blog.html">
+        
+        <link rel="stylesheet" href="css/index.css"/>
+        <link rel="stylesheet" href="css/blog.css"/>
+        <script>
+            function todayDate(){
+               var d = new Date();
+               var n = d.getFullYear() + "  ";
+               return document.getElementById("date").innerHTML = n;
+             }
+        </script>
+    </head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2QRN01CDHN"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2QRN01CDHN');
+    </script>
+    <body onload=todayDate()>
+        <div id="blog">
+            <div class="header-nav sticky" id="navbar">
+                <h1><a href="index.html">ImgDoes<span>It</span></a></h1>
+                <button onclick=openNav()>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div id="mob-nav">
+                    <ul>
+                        <li><button onclick=closeNav()>&#10005;</button></li>
+                        <li><a href="index.html#home" onclick=closeNav()>Home</a></li>
+                        <li><a href="index.html#about" onclick=closeNav()>About</a></li>
+                        <li><a href="index.html#products" onclick=closeNav()>Products</a></li>
+                        <li><a href="blog.html" class="active" onclick=closeNav()>Blog</a></li>
+                        <li><a href="index.html#contacts" onclick=closeNav()>Contact</a></li>
+                    </ul>    
+                </div>
+                <ul>
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#products">Products</a></li>
+                    <li><a href="blog.html" class="active">Blog</a></li>
+                    <li><a href="index.html#contacts">Contact</a></li>
+                </ul>
+            </div>
+            
+            <h2>Blog</h2>
+            <div id="blog-search">
+                <div id="search-input-wrapper">
+                    <input type="text" id="search-input" placeholder="Search posts..." />
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+            </div>
+            <div id="blog-body" class="entry">
+                <p>Loading blog posts...</p>
+            </div>
+        </div>
+
+        <div id="footer">
+            <p>&copy; <span id="date"></span> ImgDoesIt</p>
+        </div>
+
+        <script src="js/blog.js"></script>
+        <script>
+            function openNav(){
+                var mobNav = document.getElementById("mob-nav");
+                mobNav.style.display = "block";
+            }
+
+            function closeNav(){
+                var mobNav = document.getElementById("mob-nav");
+                mobNav.style.display = "none";
+            }
+        </script>
+    </body>
+</html>

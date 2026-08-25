@@ -1,0 +1,4 @@
+instagram-scheduler/.env
+*.zip
+dist/
+node_modules/

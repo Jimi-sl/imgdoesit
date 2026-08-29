@@ -1,6 +1,7 @@
 // Contentful Configuration
 const CONTENTFUL_SPACE_ID = 'xdddd10ff6v5'; // Replace with your Contentful Space ID
 const CONTENTFUL_ACCESS_TOKEN = 'wz4K0E8_IdR2Gb0j9QkQS9txumikzNc5lY2TzUQHHtk'; // Replace with your Contentful Access Token
+const COMMENT_CONTENT_TYPE = 'comment';
 // Comment submission no longer talks to Contentful's Management API directly from here -
 // it posts to the Cloudflare Worker's /api/comments route instead, which holds the
 // write-capable management token server-side. See cloudflare-worker.js.

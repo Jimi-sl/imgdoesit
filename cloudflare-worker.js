@@ -221,6 +221,8 @@ async function handleCommentSubmission(request) {
     );
 
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`Contentful comment creation failed: ${response.status} ${errorBody}`);
       return jsonResponse({ error: 'Failed to submit comment.' }, 502);
     }
 

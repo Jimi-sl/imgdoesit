@@ -1,9 +1,13 @@
 # Cloudflare Worker Setup Guide
 
 ## What This Does
-1. Intercepts blog post page requests and injects the correct title and description
-   into meta tags so Twitter, Facebook, and LinkedIn show proper previews when shared.
-2. Proxies comment submissions to Contentful's Management API, so the write-capable
+1. Intercepts blog post page requests and injects the correct title, description,
+   image, and the actual post content (instead of the client-JS-only "Loading
+   post..." placeholder) plus Article structured data — so both social previews and
+   search engine crawlers see the real page on the first request.
+2. Generates `/sitemap.xml` live from Contentful so every blog post is listed, not
+   just the static pages.
+3. Proxies comment submissions to Contentful's Management API, so the write-capable
    management token lives only as an encrypted Worker secret and is never shipped to
    the browser.
 
@@ -37,6 +41,10 @@
 - Route: `*imgdoesit.com/api/comments*`
 - Worker: Select `imgdoesit-blog-meta`
 - Click **"Save"**
+- Click **"Add Route"** again
+- Route: `*imgdoesit.com/sitemap.xml*`
+- Worker: Select `imgdoesit-blog-meta`
+- Click **"Save"**
 
 ### 5. Add the Management Token as a Secret
 - Open the `imgdoesit-blog-meta` Worker
@@ -55,15 +63,28 @@
   - LinkedIn: https://www.linkedin.com/post-inspector/
 - Test commenting: open a blog post, submit a comment, confirm it shows "will appear
   once approved" and then check the new entry appears in Contentful (draft/pending)
+- Test SEO rendering: `curl -s "https://www.imgdoesit.com/blog-post.html?id=<a-real-post-id>"`
+  and confirm the response HTML already contains the post's `<h1>` and body text, not
+  "Loading post..." — that's the difference between crawlers seeing real content
+  immediately vs. having to execute JavaScript first
+- Test the sitemap: open `https://www.imgdoesit.com/sitemap.xml` and confirm it lists
+  a `<url>` entry for every published post, not just the two static pages
+- Once the Worker route for `/sitemap.xml` is live, submit the sitemap in
+  [Google Search Console](https://search.google.com/search-console) (Sitemaps > Add
+  a new sitemap) so Google knows to crawl the newly-listed post URLs
 
 ## How It Works
-1. Someone shares a blog post link on social media
-2. The social media bot requests the page
-3. Cloudflare Worker intercepts the request
-4. Worker fetches the blog post title from Contentful
-5. Worker injects the correct title and description into meta tags
-6. Social media bot reads the correct meta tags
-7. Proper preview is shown with the blog post title and description
+1. Someone (or a crawler) requests a blog post page
+2. Cloudflare Worker intercepts the request before it reaches GitHub Pages
+3. Worker fetches the post (and its featured image) from Contentful
+4. Worker injects the correct title/description/image meta tags, renders the actual
+   post content into the HTML, and adds Article structured data
+5. The response already contains real content — no JavaScript execution required to
+   see it, which is what both social media bots and search engine crawlers rely on
+
+Note: `js/blog-post.js` still fetches and re-renders the same content client-side
+after the page loads (e.g. for the comments section, which isn't server-rendered).
+That's expected and harmless — it just re-paints the same content once JS runs.
 
 ## Free Tier Limits
 - 100,000 requests per day (more than enough)

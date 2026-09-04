@@ -1,18 +1,22 @@
 # Cloudflare Worker Setup Guide
 
 ## What This Does
-1. Serves each blog post at a clean, readable URL — `/blog/<slug>`, slugified from
+1. Renders real post cards (title, excerpt, link) into `blog.html` — the post listing
+   page — instead of leaving the client-JS-only "Loading blog posts..." placeholder,
+   plus ItemList structured data. Crawlers can now discover and follow links to every
+   post directly from the hub page, not just via the sitemap.
+2. Serves each blog post at a clean, readable URL — `/blog/<slug>`, slugified from
    its title — instead of an opaque `blog-post.html?id=...` link. Old ID-based links
    never break: they 301 redirect to the new slug URL, so bookmarks/backlinks still
    land on the right post (via one redirect hop) and both the address bar and all
    ranking/social signal consolidate onto the new URL.
-2. Injects the correct title, description, image, and the actual post content
+3. Injects the correct title, description, image, and the actual post content
    (instead of the client-JS-only "Loading post..." placeholder) plus Article
    structured data on the `/blog/<slug>` route — so both social previews and search
    engine crawlers see the real page on the first request.
-3. Generates `/sitemap.xml` live from Contentful, listing every post at its new
+4. Generates `/sitemap.xml` live from Contentful, listing every post at its new
    `/blog/<slug>` URL.
-4. Proxies comment submissions to Contentful's Management API, so the write-capable
+5. Proxies comment submissions to Contentful's Management API, so the write-capable
    management token lives only as an encrypted Worker secret and is never shipped to
    the browser.
 
@@ -54,6 +58,10 @@
 - Route: `*imgdoesit.com/blog/*`
 - Worker: Select `imgdoesit-blog-meta`
 - Click **"Save"**
+- Click **"Add Route"** again
+- Route: `*imgdoesit.com/blog.html*`
+- Worker: Select `imgdoesit-blog-meta`
+- Click **"Save"**
 
 ### 5. Add the Management Token as a Secret
 - Open the `imgdoesit-blog-meta` Worker
@@ -81,6 +89,8 @@
   (which depends on `window.__POST_ID__` being set)
 - Test the old links redirect: `curl -sI "https://www.imgdoesit.com/blog-post.html?id=<a-real-post-id>"`
   should return `301` with a `location` header pointing at `/blog/<slug>` for that post
+- Test the listing page: `curl -s "https://www.imgdoesit.com/blog.html"` and confirm the
+  response already contains real post titles/excerpts/links, not "Loading blog posts..."
 - Test the sitemap: open `https://www.imgdoesit.com/sitemap.xml` and confirm it lists
   a `<url>` entry for every published post, not just the two static pages
 - Once the Worker route for `/sitemap.xml` is live, submit the sitemap in

@@ -1,5 +1,9 @@
 // Cloudflare Worker for Dynamic Meta Tags + SEO Rendering + Comment Submission Proxy
 //
+// - GET  /blog.html               -> renders real post cards (title/excerpt/link to each
+//                                    /blog/<slug>) into the hub page instead of leaving the
+//                                    client-JS-only "Loading blog posts..." placeholder, plus
+//                                    ItemList structured data.
 // - GET  /blog/<slug>            -> the new canonical, human-readable post URL. Resolves
 //                                    the slug back to a Contentful entry (slugified from
 //                                    its title - see slugify() below) and renders it.
@@ -17,7 +21,8 @@
 // - POST /api/comments           -> creates a Contentful comment entry server-side, so the
 //                                    write-capable management token never reaches the browser
 //
-// Requires four Worker Routes pointed at this script (see CLOUDFLARE_WORKER_SETUP.md):
+// Requires five Worker Routes pointed at this script (see CLOUDFLARE_WORKER_SETUP.md):
+//   *imgdoesit.com/blog.html*
 //   *imgdoesit.com/blog-post.html*
 //   *imgdoesit.com/blog/*
 //   *imgdoesit.com/sitemap.xml*
@@ -49,6 +54,13 @@ async function handleRequest(request) {
     return handleSitemap(request);
   }
 
+  // The blog listing/hub page. The '_tmpl' marker distinguishes a real visitor
+  // request from this function's own subrequest for the raw template below -
+  // without it, that subrequest would just re-trigger this same branch forever.
+  if (url.pathname === '/blog.html' && !url.searchParams.has('_tmpl')) {
+    return handleBlogListing(request, url);
+  }
+
   // Legacy ID-based links - 301 redirect to the canonical /blog/<slug> URL.
   if (url.pathname === '/blog-post.html' && url.searchParams.has('id')) {
     return redirectToCanonicalSlug(request, url.searchParams.get('id'));
@@ -71,6 +83,100 @@ async function handleRequest(request) {
 
   // For all other requests, pass through to origin
   return fetch(request);
+}
+
+// Renders real post cards (title/excerpt/link) into blog.html instead of leaving
+// the client-JS-only "Loading blog posts..." placeholder. Without this, crawlers
+// hitting the hub page directly saw no post content and no links to any post -
+// discovery relied entirely on the sitemap rather than normal page links.
+async function handleBlogListing(request, url) {
+  try {
+    const templateUrl = new URL('/blog.html?_tmpl=1', url.origin);
+    const templateResponse = await fetch(templateUrl.toString(), {
+      headers: request.headers,
+      redirect: 'follow',
+      cf: { cacheTtl: 3600, cacheEverything: true }
+    });
+
+    if (!templateResponse.ok) {
+      return templateResponse;
+    }
+
+    let html = await templateResponse.text();
+
+    const contentfulUrl = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/entries?access_token=${CONTENTFUL_ACCESS_TOKEN}&content_type=blogPost&limit=1000`;
+    const postsResponse = await fetch(contentfulUrl);
+
+    if (!postsResponse.ok) {
+      return new Response(html, templateResponse);
+    }
+
+    const postsData = await postsResponse.json();
+    const posts = postsData.items || [];
+
+    // Mirrors displayBlogPosts() in js/blog.js so the server-rendered cards and
+    // the client's re-rendered ones (once JS loads) look identical.
+    const cardsHtml = posts.map(post => {
+      const fields = post.fields;
+      const plainText = richTextToPlainText(fields.body);
+      const excerpt = plainText ? plainText.substring(0, 150) + '...' : 'Read more...';
+      const slug = slugify(fields.title);
+      return `<div class="blog-card">
+            <div class="blog-card-content">
+                <h3>${escapeHtml(fields.title)}</h3>
+                <p class="blog-excerpt">${escapeHtml(excerpt)}</p>
+                <a href="blog/${slug}" class="blog-read-more">Read More</a>
+            </div>
+        </div>`;
+    }).join('\n');
+
+    html = html.replace(
+      /<div id="blog-body" class="entry">[\s\S]*?<\/div>/,
+      `<div id="blog-body" class="entry">${cardsHtml || '<p>No blog posts available yet.</p>'}</div>`
+    );
+
+    // Lightweight ItemList structured data pointing at every post
+    const itemListLd = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: posts.map((post, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://www.imgdoesit.com/blog/${slugify(post.fields.title)}`
+      }))
+    };
+    const itemListJson = JSON.stringify(itemListLd).replace(/</g, '\\u003c');
+    html = html.replace(
+      '</head>',
+      `<script type="application/ld+json">${itemListJson}</script>\n    </head>`
+    );
+
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'content-type': 'text/html;charset=UTF-8',
+        'cache-control': 'public, max-age=3600'
+      }
+    });
+  } catch (error) {
+    console.error('Worker error (blog listing):', error);
+    return fetch(request);
+  }
+}
+
+// Server-side mirror of the client's richTextToPlainText() in js/blog.js, used
+// to build post excerpts for the listing page.
+function richTextToPlainText(richText) {
+  if (!richText || !richText.content) return '';
+  let text = '';
+  for (const node of richText.content) {
+    if (node.nodeType === 'paragraph' && node.content) {
+      for (const textNode of node.content) {
+        if (textNode.value) text += textNode.value + ' ';
+      }
+    }
+  }
+  return text.trim();
 }
 
 // Looks up the post's title just to compute its slug, then 301s to /blog/<slug>.

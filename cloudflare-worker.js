@@ -3,11 +3,12 @@
 // - GET  /blog/<slug>            -> the new canonical, human-readable post URL. Resolves
 //                                    the slug back to a Contentful entry (slugified from
 //                                    its title - see slugify() below) and renders it.
-// - GET  /blog-post.html?id=...  -> the original ID-based URL. Kept working forever so old
-//                                    links/bookmarks/backlinks never break, but its
-//                                    <link rel="canonical"> now points at the new /blog/<slug>
-//                                    URL so search engines consolidate ranking signal there.
-// Both of the above inject real title/description/OG/image tags AND the actual post
+// - GET  /blog-post.html?id=...  -> the original ID-based URL. Never breaks - 301 redirects
+//                                    to the canonical /blog/<slug> URL, so old bookmarks and
+//                                    backlinks still land on the right post (via one redirect
+//                                    hop), and the address bar + all ranking/social signal
+//                                    consolidate onto the new URL.
+// The /blog/<slug> route injects real title/description/OG/image tags AND the actual post
 // title+body into the HTML (instead of the client-JS-only "Loading post..." placeholder),
 // plus Article structured data, so crawlers see real content on the first request without
 // running JS.
@@ -48,10 +49,9 @@ async function handleRequest(request) {
     return handleSitemap(request);
   }
 
-  // Legacy ID-based links - kept working forever, never redirected, just
-  // rendered with a canonical tag pointing at the new slug URL.
+  // Legacy ID-based links - 301 redirect to the canonical /blog/<slug> URL.
   if (url.pathname === '/blog-post.html' && url.searchParams.has('id')) {
-    return renderBlogPostResponse(request, url, url.searchParams.get('id'));
+    return redirectToCanonicalSlug(request, url.searchParams.get('id'));
   }
 
   // New canonical slug URLs, e.g. /blog/open-dish-how-the-dish-got-colder
@@ -73,8 +73,28 @@ async function handleRequest(request) {
   return fetch(request);
 }
 
-// Shared by both the /blog-post.html?id= and /blog/<slug> routes: fetches the
-// blog-post.html template plus the Contentful entry, and renders one into the other.
+// Looks up the post's title just to compute its slug, then 301s to /blog/<slug>.
+// Falls back to passing the request straight through to origin (the old,
+// unrendered template) if Contentful can't be reached, rather than erroring out.
+async function redirectToCanonicalSlug(request, postId) {
+  try {
+    const contentfulUrl = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/entries/${postId}?access_token=${CONTENTFUL_ACCESS_TOKEN}`;
+    const res = await fetch(contentfulUrl);
+    if (!res.ok) return fetch(request);
+
+    const postData = await res.json();
+    if (!postData.fields?.title) return fetch(request);
+
+    const slug = slugify(postData.fields.title);
+    return Response.redirect(`https://www.imgdoesit.com/blog/${slug}`, 301);
+  } catch (error) {
+    console.error('Worker error (id redirect):', error);
+    return fetch(request);
+  }
+}
+
+// Fetches the blog-post.html template plus the Contentful entry, and renders
+// one into the other. Used by the /blog/<slug> route.
 async function renderBlogPostResponse(request, url, postId) {
   try {
     // The template lives at /blog-post.html regardless of which URL the visitor used.

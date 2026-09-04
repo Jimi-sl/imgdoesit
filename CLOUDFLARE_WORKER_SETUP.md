@@ -2,14 +2,14 @@
 
 ## What This Does
 1. Serves each blog post at a clean, readable URL — `/blog/<slug>`, slugified from
-   its title — instead of an opaque `blog-post.html?id=...` link. The old ID-based
-   URLs keep working forever (nothing that already links to one breaks), but now
-   render with `<link rel="canonical">` pointing at the new slug URL, so search
-   engines consolidate ranking signal onto the preferred address.
+   its title — instead of an opaque `blog-post.html?id=...` link. Old ID-based links
+   never break: they 301 redirect to the new slug URL, so bookmarks/backlinks still
+   land on the right post (via one redirect hop) and both the address bar and all
+   ranking/social signal consolidate onto the new URL.
 2. Injects the correct title, description, image, and the actual post content
    (instead of the client-JS-only "Loading post..." placeholder) plus Article
-   structured data on both URL styles — so both social previews and search engine
-   crawlers see the real page on the first request.
+   structured data on the `/blog/<slug>` route — so both social previews and search
+   engine crawlers see the real page on the first request.
 3. Generates `/sitemap.xml` live from Contentful, listing every post at its new
    `/blog/<slug>` URL.
 4. Proxies comment submissions to Contentful's Management API, so the write-capable
@@ -72,16 +72,15 @@
   - LinkedIn: https://www.linkedin.com/post-inspector/
 - Test commenting: open a blog post, submit a comment, confirm it shows "will appear
   once approved" and then check the new entry appears in Contentful (draft/pending)
-- Test SEO rendering: `curl -s "https://www.imgdoesit.com/blog-post.html?id=<a-real-post-id>"`
+- Test SEO rendering: `curl -s "https://www.imgdoesit.com/blog/<a-real-post-slug>"`
   and confirm the response HTML already contains the post's `<h1>` and body text, not
   "Loading post..." — that's the difference between crawlers seeing real content
   immediately vs. having to execute JavaScript first
 - Test the new slug URLs: open a post from `blog.html`'s "Read More" link and confirm
-  it lands on `/blog/<slug>` (not `blog-post.html?id=...`) and renders correctly,
-  including the comments section (which depends on `window.__POST_ID__` being set)
-- Test the old links still work: `curl -s "https://www.imgdoesit.com/blog-post.html?id=<a-real-post-id>"`
-  should still return 200 with real content, and its `<link rel="canonical">` should
-  point at the post's `/blog/<slug>` URL instead of the id-based one
+  it lands on `/blog/<slug>` and renders correctly, including the comments section
+  (which depends on `window.__POST_ID__` being set)
+- Test the old links redirect: `curl -sI "https://www.imgdoesit.com/blog-post.html?id=<a-real-post-id>"`
+  should return `301` with a `location` header pointing at `/blog/<slug>` for that post
 - Test the sitemap: open `https://www.imgdoesit.com/sitemap.xml` and confirm it lists
   a `<url>` entry for every published post, not just the two static pages
 - Once the Worker route for `/sitemap.xml` is live, submit the sitemap in

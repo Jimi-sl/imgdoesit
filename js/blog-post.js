@@ -6,8 +6,10 @@ const COMMENT_CONTENT_TYPE = 'comment';
 // it posts to the Cloudflare Worker's /api/comments route instead, which holds the
 // write-capable management token server-side. See cloudflare-worker.js.
 
-// Get post ID from URL
+// Get post ID from the page (set server-side by the Worker, since /blog/<slug>
+// URLs carry no ?id= param) or fall back to the query string for direct/old links.
 function getPostIdFromUrl() {
+    if (window.__POST_ID__) return window.__POST_ID__;
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');
 }

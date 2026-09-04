@@ -1,17 +1,24 @@
 // Cloudflare Worker for Dynamic Meta Tags + SEO Rendering + Comment Submission Proxy
 //
-// - GET  /blog-post.html?id=...  -> injects real title/description/OG/image tags AND the
-//                                    actual post title+body into the HTML (instead of the
-//                                    client-JS-only "Loading post..." placeholder), plus
-//                                    Article structured data, so crawlers see real content
-//                                    on the first request without running JS
-// - GET  /sitemap.xml             -> generated live from Contentful, so every blog post is
-//                                    discoverable instead of just the static pages
+// - GET  /blog/<slug>            -> the new canonical, human-readable post URL. Resolves
+//                                    the slug back to a Contentful entry (slugified from
+//                                    its title - see slugify() below) and renders it.
+// - GET  /blog-post.html?id=...  -> the original ID-based URL. Kept working forever so old
+//                                    links/bookmarks/backlinks never break, but its
+//                                    <link rel="canonical"> now points at the new /blog/<slug>
+//                                    URL so search engines consolidate ranking signal there.
+// Both of the above inject real title/description/OG/image tags AND the actual post
+// title+body into the HTML (instead of the client-JS-only "Loading post..." placeholder),
+// plus Article structured data, so crawlers see real content on the first request without
+// running JS.
+// - GET  /sitemap.xml             -> generated live from Contentful, listing every post at
+//                                    its canonical /blog/<slug> URL
 // - POST /api/comments           -> creates a Contentful comment entry server-side, so the
 //                                    write-capable management token never reaches the browser
 //
-// Requires three Worker Routes pointed at this script (see CLOUDFLARE_WORKER_SETUP.md):
+// Requires four Worker Routes pointed at this script (see CLOUDFLARE_WORKER_SETUP.md):
 //   *imgdoesit.com/blog-post.html*
+//   *imgdoesit.com/blog/*
 //   *imgdoesit.com/sitemap.xml*
 //   *imgdoesit.com/api/comments*
 //
@@ -41,151 +48,204 @@ async function handleRequest(request) {
     return handleSitemap(request);
   }
 
-  // Only intercept blog-post.html requests with an ID parameter
+  // Legacy ID-based links - kept working forever, never redirected, just
+  // rendered with a canonical tag pointing at the new slug URL.
   if (url.pathname === '/blog-post.html' && url.searchParams.has('id')) {
-    const postId = url.searchParams.get('id');
+    return renderBlogPostResponse(request, url, url.searchParams.get('id'));
+  }
 
+  // New canonical slug URLs, e.g. /blog/open-dish-how-the-dish-got-colder
+  if (url.pathname.startsWith('/blog/') && url.pathname !== '/blog/') {
+    const slug = decodeURIComponent(url.pathname.slice('/blog/'.length).replace(/\/$/, ''));
     try {
-      // Fetch the original HTML from origin, bypassing the worker to avoid loop
-      const originUrl = new URL(request.url);
-      originUrl.searchParams.delete('id');
-      const response = await fetch(originUrl.toString(), {
-        headers: request.headers,
-        redirect: 'follow',
-        cf: { cacheTtl: 3600, cacheEverything: true }
-      });
-      
-      // If origin returns 404 or error, pass through
-      if (!response.ok) {
-        return response;
+      const postId = await resolveSlugToPostId(slug);
+      if (!postId) {
+        return new Response('Post not found', { status: 404 });
       }
-      
-      let html = await response.text();
-
-      // Fetch blog post data from Contentful, including linked assets (featured image)
-      const contentfulUrl = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/entries/${postId}?access_token=${CONTENTFUL_ACCESS_TOKEN}&include=1`;
-      const postResponse = await fetch(contentfulUrl);
-
-      if (!postResponse.ok) {
-        // If Contentful fails, return original HTML
-        return new Response(html, response);
-      }
-
-      const postData = await postResponse.json();
-
-      if (postData.fields) {
-        const title = postData.fields.title || 'Blog Post';
-        const description = extractDescription(postData.fields.body);
-        const fullTitle = `${title} - ImgDoesIt`;
-        const escapedTitle = escapeHtml(fullTitle);
-        const escapedDescription = escapeHtml(description);
-        const assets = postData.includes?.Asset || [];
-        const ogImage = findFeaturedImageUrl(postData.fields, assets);
-        const bodyHtml = richTextToHtml(postData.fields.body);
-
-        // Replace meta tags in HTML
-        html = html.replace(
-          /<title>.*?<\/title>/,
-          `<title>${escapedTitle}</title>`
-        );
-
-        html = html.replace(
-          /<meta name="description" content=".*?">/,
-          `<meta name="description" content="${escapedDescription}">`
-        );
-
-        html = html.replace(
-          /<meta property="og:title" content=".*?">/,
-          `<meta property="og:title" content="${escapedTitle}">`
-        );
-
-        html = html.replace(
-          /<meta property="og:description" content=".*?">/,
-          `<meta property="og:description" content="${escapedDescription}">`
-        );
-
-        html = html.replace(
-          /<meta property="og:image" content=".*?">/,
-          `<meta property="og:image" content="${ogImage}">`
-        );
-
-        html = html.replace(
-          /<meta property="og:url" content=".*?">/,
-          `<meta property="og:url" content="${url.href}">`
-        );
-
-        html = html.replace(
-          /<meta property="twitter:url" content=".*?">/,
-          `<meta property="twitter:url" content="${url.href}">`
-        );
-
-        html = html.replace(
-          /<meta property="twitter:title" content=".*?">/,
-          `<meta property="twitter:title" content="${escapedTitle}">`
-        );
-
-        html = html.replace(
-          /<meta property="twitter:description" content=".*?">/,
-          `<meta property="twitter:description" content="${escapedDescription}">`
-        );
-
-        html = html.replace(
-          /<meta property="twitter:image" content=".*?">/,
-          `<meta property="twitter:image" content="${ogImage}">`
-        );
-
-        // Update canonical URL
-        html = html.replace(
-          /<link rel="canonical" href=".*?">/,
-          `<link rel="canonical" href="${url.href}">`
-        );
-
-        // Render the actual post into the page instead of leaving the
-        // client-JS-only "Loading post..." placeholder for crawlers that
-        // don't execute JavaScript (or execute it late/unreliably).
-        html = html.replace(
-          /<div id="blog-post-content" class="entry">[\s\S]*?<\/div>/,
-          `<div id="blog-post-content" class="entry">\n                <h1>${escapeHtml(title)}</h1>\n                <div class="blog-post-body">${bodyHtml}</div>\n            </div>`
-        );
-
-        // Article structured data for rich results
-        const articleLd = {
-          '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
-          headline: title,
-          description,
-          image: ogImage,
-          datePublished: postData.sys.createdAt,
-          dateModified: postData.sys.updatedAt,
-          author: { '@type': 'Organization', name: 'ImgDoesIt' },
-          publisher: { '@type': 'Organization', name: 'ImgDoesIt' },
-          mainEntityOfPage: { '@type': 'WebPage', '@id': url.href }
-        };
-        const articleLdJson = JSON.stringify(articleLd).replace(/</g, '\\u003c');
-        html = html.replace(
-          '</head>',
-          `<script type="application/ld+json">${articleLdJson}</script>\n    </head>`
-        );
-      }
-
-      return new Response(html, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: {
-          'content-type': 'text/html;charset=UTF-8',
-          'cache-control': 'public, max-age=3600'
-        }
-      });
-      
+      return renderBlogPostResponse(request, url, postId);
     } catch (error) {
-      // If anything fails, try to return original page
-      console.error('Worker error:', error);
+      console.error('Worker error (slug route):', error);
       return fetch(request);
     }
   }
-  
+
   // For all other requests, pass through to origin
   return fetch(request);
+}
+
+// Shared by both the /blog-post.html?id= and /blog/<slug> routes: fetches the
+// blog-post.html template plus the Contentful entry, and renders one into the other.
+async function renderBlogPostResponse(request, url, postId) {
+  try {
+    // The template lives at /blog-post.html regardless of which URL the visitor used.
+    const templateUrl = new URL('/blog-post.html', url.origin);
+    const templateResponse = await fetch(templateUrl.toString(), {
+      headers: request.headers,
+      redirect: 'follow',
+      cf: { cacheTtl: 3600, cacheEverything: true }
+    });
+
+    // If origin returns 404 or error, pass through
+    if (!templateResponse.ok) {
+      return templateResponse;
+    }
+
+    const templateHtml = await templateResponse.text();
+
+    // Fetch blog post data from Contentful, including linked assets (featured image)
+    const contentfulUrl = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/entries/${postId}?access_token=${CONTENTFUL_ACCESS_TOKEN}&include=1`;
+    const postResponse = await fetch(contentfulUrl);
+
+    if (!postResponse.ok) {
+      // If Contentful fails, return the unrendered template rather than nothing
+      return new Response(templateHtml, templateResponse);
+    }
+
+    const postData = await postResponse.json();
+
+    if (!postData.fields) {
+      return new Response(templateHtml, templateResponse);
+    }
+
+    // Every route renders with the same canonical URL, so link equity and
+    // social share counts consolidate onto the one preferred address.
+    const canonicalUrl = `https://www.imgdoesit.com/blog/${slugify(postData.fields.title)}`;
+    const html = renderPostIntoTemplate(templateHtml, postData, canonicalUrl);
+
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'content-type': 'text/html;charset=UTF-8',
+        'cache-control': 'public, max-age=3600'
+      }
+    });
+  } catch (error) {
+    console.error('Worker error rendering post:', error);
+    return fetch(request);
+  }
+}
+
+// Injects the post's title/description/image/content/structured-data into the
+// blog-post.html template. Also sets window.__POST_ID__ so js/blog-post.js can find
+// the post client-side even on /blog/<slug> URLs, which carry no ?id= query param.
+function renderPostIntoTemplate(html, postData, canonicalUrl) {
+  const title = postData.fields.title || 'Blog Post';
+  const description = extractDescription(postData.fields.body);
+  const fullTitle = `${title} - ImgDoesIt`;
+  const escapedTitle = escapeHtml(fullTitle);
+  const escapedDescription = escapeHtml(description);
+  const assets = postData.includes?.Asset || [];
+  const ogImage = findFeaturedImageUrl(postData.fields, assets);
+  const bodyHtml = richTextToHtml(postData.fields.body);
+
+  html = html.replace(
+    /<title>.*?<\/title>/,
+    `<title>${escapedTitle}</title>`
+  );
+
+  html = html.replace(
+    /<meta name="description" content=".*?">/,
+    `<meta name="description" content="${escapedDescription}">`
+  );
+
+  html = html.replace(
+    /<meta property="og:title" content=".*?">/,
+    `<meta property="og:title" content="${escapedTitle}">`
+  );
+
+  html = html.replace(
+    /<meta property="og:description" content=".*?">/,
+    `<meta property="og:description" content="${escapedDescription}">`
+  );
+
+  html = html.replace(
+    /<meta property="og:image" content=".*?">/,
+    `<meta property="og:image" content="${ogImage}">`
+  );
+
+  html = html.replace(
+    /<meta property="og:url" content=".*?">/,
+    `<meta property="og:url" content="${canonicalUrl}">`
+  );
+
+  html = html.replace(
+    /<meta property="twitter:url" content=".*?">/,
+    `<meta property="twitter:url" content="${canonicalUrl}">`
+  );
+
+  html = html.replace(
+    /<meta property="twitter:title" content=".*?">/,
+    `<meta property="twitter:title" content="${escapedTitle}">`
+  );
+
+  html = html.replace(
+    /<meta property="twitter:description" content=".*?">/,
+    `<meta property="twitter:description" content="${escapedDescription}">`
+  );
+
+  html = html.replace(
+    /<meta property="twitter:image" content=".*?">/,
+    `<meta property="twitter:image" content="${ogImage}">`
+  );
+
+  // Update canonical URL
+  html = html.replace(
+    /<link rel="canonical" href=".*?">/,
+    `<link rel="canonical" href="${canonicalUrl}">`
+  );
+
+  // Render the actual post into the page instead of leaving the
+  // client-JS-only "Loading post..." placeholder for crawlers that
+  // don't execute JavaScript (or execute it late/unreliably).
+  html = html.replace(
+    /<div id="blog-post-content" class="entry">[\s\S]*?<\/div>/,
+    `<div id="blog-post-content" class="entry">\n                <h1>${escapeHtml(title)}</h1>\n                <div class="blog-post-body">${bodyHtml}</div>\n            </div>`
+  );
+
+  // Article structured data for rich results
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description,
+    image: ogImage,
+    datePublished: postData.sys.createdAt,
+    dateModified: postData.sys.updatedAt,
+    author: { '@type': 'Organization', name: 'ImgDoesIt' },
+    publisher: { '@type': 'Organization', name: 'ImgDoesIt' },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl }
+  };
+  const articleLdJson = JSON.stringify(articleLd).replace(/</g, '\\u003c');
+  html = html.replace(
+    '</head>',
+    `<script>window.__POST_ID__ = ${JSON.stringify(postData.sys.id)};</script>\n    <script type="application/ld+json">${articleLdJson}</script>\n    </head>`
+  );
+
+  return html;
+}
+
+// Resolves a /blog/<slug> URL back to the Contentful entry it refers to by
+// slugifying every post's title and matching. Keep slugify() identical to the
+// copy in js/blog.js, which generates these URLs in the first place.
+async function resolveSlugToPostId(slug) {
+  const listUrl = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}/entries?access_token=${CONTENTFUL_ACCESS_TOKEN}&content_type=blogPost&select=sys.id,fields.title&limit=1000`;
+  const res = await fetch(listUrl);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const match = (data.items || []).find(post => slugify(post.fields.title) === slug);
+  return match ? match.sys.id : null;
+}
+
+// Turns a post title into a URL slug, e.g. "Open Dish: How the Dish..." ->
+// "open-dish-how-the-dish...". Keep this identical to the copy in js/blog.js.
+function slugify(text) {
+  const slug = String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (slug.length <= 80) return slug;
+  // Trim to the last full word within the 80-char budget rather than cutting mid-word.
+  return slug.slice(0, 80).replace(/-[^-]*$/, '');
 }
 
 // Creates a Contentful comment entry using the management token, which lives only
@@ -250,7 +310,8 @@ async function handleSitemap(request) {
 
     const postEntries = posts.map(post => {
       const lastmod = (post.sys.updatedAt || post.sys.createdAt || '').slice(0, 10);
-      return `  <url>\n    <loc>${siteUrl}/blog-post.html?id=${post.sys.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`;
+      const slug = slugify(post.fields.title);
+      return `  <url>\n    <loc>${siteUrl}/blog/${slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`;
     });
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...staticEntries, ...postEntries].join('\n')}\n</urlset>\n`;

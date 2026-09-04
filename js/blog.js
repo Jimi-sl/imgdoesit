@@ -6,6 +6,17 @@ const CONTENTFUL_API_URL = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE
 // Store posts for filtering
 let allPosts = [];
 
+// Turns a post title into a URL slug. Keep this identical to the copy of
+// slugify() in cloudflare-worker.js, which resolves these URLs back to posts.
+function slugify(text) {
+    const slug = String(text || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    if (slug.length <= 80) return slug;
+    return slug.slice(0, 80).replace(/-[^-]*$/, '');
+}
+
 // Fetch blog posts from Contentful
 async function fetchBlogPosts() {
     try {
@@ -59,7 +70,7 @@ function displayBlogPosts(posts) {
             <div class="blog-card-content">
                 <h3>${fields.title}</h3>
                 <p class="blog-excerpt">${excerpt}</p>
-                <a href="blog-post.html?id=${post.sys.id}" class="blog-read-more">Read More</a>
+                <a href="blog/${slugify(fields.title)}" class="blog-read-more">Read More</a>
             </div>
         `;
         

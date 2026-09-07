@@ -5,13 +5,16 @@ class DailyBackgroundManager {
         this.PEXELS_API_KEY = 'vspD8Y3rvYe96yMMganJbYk45KJnXkG5vkqBJeBvv8Mm5vY3CHdZPmXj';
     }
 
-    // How wide an image to request from Unsplash/Pexels, sized to the actual
+    // How tall an image to request from Unsplash/Pexels, sized to the actual
     // device instead of always pulling their full/original resolution (which
-    // can be several thousand pixels wide - way oversized for a CSS background,
+    // can be several thousand pixels - way oversized for a CSS background,
     // especially on mobile where it's a pure bandwidth/battery cost).
-    getResponsiveWidth() {
+    // Sized by HEIGHT, not width: the hero locks background-size to
+    // "auto 100%" (height fills the hero, width overflows and crops), so
+    // height is the dimension that actually needs to stay crisp.
+    getResponsiveHeight() {
         const dpr = window.devicePixelRatio || 1;
-        return Math.min(Math.round(window.innerWidth * dpr), 1920);
+        return Math.min(Math.round(window.innerHeight * dpr), 1920);
     }
 
     // Deterministic seed from today's date (same number every day, everywhere)
@@ -88,11 +91,13 @@ class DailyBackgroundManager {
             if (data.results && data.results.length > 0) {
                 const photo = data.results[index % data.results.length];
                 // photo.urls.raw is Unsplash's imgix source - appending our own
-                // w/q params gets an image sized for this device instead of
-                // downloading photo.urls.full (their unsized original).
-                const width = this.getResponsiveWidth();
+                // h/q params gets an image sized for this device instead of
+                // downloading photo.urls.full (their unsized original). Only
+                // height is specified so width scales proportionally (needed
+                // to overflow horizontally under background-size: auto 100%).
+                const height = this.getResponsiveHeight();
                 return {
-                    url: `${photo.urls.raw}&w=${width}&q=75&fit=crop&auto=format`,
+                    url: `${photo.urls.raw}&h=${height}&q=75&auto=format`,
                     credit: `Photo by ${photo.user.name} on Unsplash`,
                     description: photo.description || photo.alt_description || 'Daily Africa/Nigeria themed background'
                 };
@@ -119,12 +124,12 @@ class DailyBackgroundManager {
             const data = await response.json();
             if (data.photos && data.photos.length > 0) {
                 const photo = data.photos[index % data.photos.length];
-                // Pexels supports resizing via a ?w= param on src.original
-                // (height adjusts automatically to keep the aspect ratio),
+                // Pexels supports resizing via a ?h= param on src.original
+                // (width adjusts automatically to keep the aspect ratio),
                 // instead of always downloading their unsized original.
-                const width = this.getResponsiveWidth();
+                const height = this.getResponsiveHeight();
                 return {
-                    url: `${photo.src.original}?w=${width}`,
+                    url: `${photo.src.original}?h=${height}`,
                     credit: `Photo by ${photo.photographer} on Pexels`,
                     description: photo.alt || 'Daily Africa/Nigeria themed background'
                 };
@@ -138,11 +143,11 @@ class DailyBackgroundManager {
 
     // Fallback images for Nigeria/Africa, sized to the device like the live ones above.
     getFallbackImages() {
-        const width = this.getResponsiveWidth();
+        const height = this.getResponsiveHeight();
         return [
-            { url: `https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=${width}&q=75`, credit: 'Lagos, Nigeria', description: 'Lagos skyline' },
-            { url: `https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&auto=format&fit=crop&w=${width}&q=75`, credit: 'African Savanna', description: 'African landscape' },
-            { url: `https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=${width}&q=75`, credit: 'Cape Town, South Africa', description: 'Table Mountain view' }
+            { url: `https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?ixlib=rb-4.0.3&auto=format&h=${height}&q=75`, credit: 'Lagos, Nigeria', description: 'Lagos skyline' },
+            { url: `https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&auto=format&h=${height}&q=75`, credit: 'African Savanna', description: 'African landscape' },
+            { url: `https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&auto=format&h=${height}&q=75`, credit: 'Cape Town, South Africa', description: 'Table Mountain view' }
         ];
     }
 
@@ -183,7 +188,10 @@ class DailyBackgroundManager {
                     const heroSection = document.getElementById('home');
                     if (heroSection) {
                         heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.15), rgba(255,255,255,0.25)), url(${imageData.url})`;
-                        heroSection.style.backgroundSize = 'cover';
+                        // Lock height to the hero's own height (100vh via CSS) and let
+                        // width overflow, centered - keeps whatever's in the middle of
+                        // the photo in view instead of "cover" cropping it unpredictably.
+                        heroSection.style.backgroundSize = 'auto 100%';
                         heroSection.style.backgroundPosition = 'center';
                         heroSection.style.backgroundAttachment = attachment;
                     }

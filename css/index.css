@@ -2,7 +2,7 @@
 *{margin: 0px; padding: 0px;}
 html {scroll-behavior: smooth;}
 body > div{height: 100vh;box-sizing: border-box;}
-#home{background-image: url("../img/sun.jpeg"); background-position: center; background-repeat: no-repeat;background-size: cover;overflow:hidden;display: flex;flex-direction: column;}
+#home{background-image: url("../img/sun.jpeg"); background-position: center; background-repeat: no-repeat;background-size: auto 100%;overflow:hidden;display: flex;flex-direction: column;}
 h1{letter-spacing: 0.8px;font-family: 'Candal', sans-serif;}
 h1 > a{text-decoration: none;color: black;text-shadow: 1px 1px 3px rgba(255,255,255,0.4);}
 h1 > a > span{color: white;border-bottom: 4px solid gold;}

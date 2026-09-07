@@ -52,7 +52,9 @@ li > a{text-decoration: none;}
 li > a:hover{color: white;}
 .email, .phone{display: flex;align-items: center;font-size: 14px; letter-spacing: 0.5px;font-family: 'Questrial', sans-serif}
 .email{margin-bottom: 8px;}
+.phone a{display: flex;align-items: center;color: inherit;text-decoration: none;}
 div > img{width: 32px;margin-right: 12px;}
+.phone img{width: 32px;margin-right: 12px;}
 #doesitfor, #about-body, #products-body, #contacts-body{opacity: 0;}
 
 ::-webkit-scrollbar {

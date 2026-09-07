@@ -5,6 +5,15 @@ class DailyBackgroundManager {
         this.PEXELS_API_KEY = 'vspD8Y3rvYe96yMMganJbYk45KJnXkG5vkqBJeBvv8Mm5vY3CHdZPmXj';
     }
 
+    // How wide an image to request from Unsplash/Pexels, sized to the actual
+    // device instead of always pulling their full/original resolution (which
+    // can be several thousand pixels wide - way oversized for a CSS background,
+    // especially on mobile where it's a pure bandwidth/battery cost).
+    getResponsiveWidth() {
+        const dpr = window.devicePixelRatio || 1;
+        return Math.min(Math.round(window.innerWidth * dpr), 1920);
+    }
+
     // Deterministic seed from today's date (same number every day, everywhere)
     getDaySeed() {
         const today = new Date();
@@ -78,8 +87,12 @@ class DailyBackgroundManager {
             const data = await response.json();
             if (data.results && data.results.length > 0) {
                 const photo = data.results[index % data.results.length];
+                // photo.urls.raw is Unsplash's imgix source - appending our own
+                // w/q params gets an image sized for this device instead of
+                // downloading photo.urls.full (their unsized original).
+                const width = this.getResponsiveWidth();
                 return {
-                    url: photo.urls.full,
+                    url: `${photo.urls.raw}&w=${width}&q=75&fit=crop&auto=format`,
                     credit: `Photo by ${photo.user.name} on Unsplash`,
                     description: photo.description || photo.alt_description || 'Daily Africa/Nigeria themed background'
                 };
@@ -106,8 +119,12 @@ class DailyBackgroundManager {
             const data = await response.json();
             if (data.photos && data.photos.length > 0) {
                 const photo = data.photos[index % data.photos.length];
+                // Pexels supports resizing via a ?w= param on src.original
+                // (height adjusts automatically to keep the aspect ratio),
+                // instead of always downloading their unsized original.
+                const width = this.getResponsiveWidth();
                 return {
-                    url: photo.src.original,
+                    url: `${photo.src.original}?w=${width}`,
                     credit: `Photo by ${photo.photographer} on Pexels`,
                     description: photo.alt || 'Daily Africa/Nigeria themed background'
                 };
@@ -119,12 +136,13 @@ class DailyBackgroundManager {
         }
     }
 
-    // Fallback images for Nigeria/Africa
+    // Fallback images for Nigeria/Africa, sized to the device like the live ones above.
     getFallbackImages() {
+        const width = this.getResponsiveWidth();
         return [
-            { url: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80', credit: 'Lagos, Nigeria', description: 'Lagos skyline' },
-            { url: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80', credit: 'African Savanna', description: 'African landscape' },
-            { url: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2067&q=80', credit: 'Cape Town, South Africa', description: 'Table Mountain view' }
+            { url: `https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=${width}&q=75`, credit: 'Lagos, Nigeria', description: 'Lagos skyline' },
+            { url: `https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&auto=format&fit=crop&w=${width}&q=75`, credit: 'African Savanna', description: 'African landscape' },
+            { url: `https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=${width}&q=75`, credit: 'Cape Town, South Africa', description: 'Table Mountain view' }
         ];
     }
 
@@ -157,18 +175,23 @@ class DailyBackgroundManager {
             if (imageData && imageData.url) {
                 const img = new Image();
                 img.onload = () => {
+                    // background-attachment: fixed is a known performance/rendering
+                    // problem on mobile browsers (janky scroll, sometimes silently
+                    // ignored anyway) - only use it above a mobile-ish viewport width.
+                    const attachment = window.innerWidth > 768 ? 'fixed' : 'scroll';
+
                     const heroSection = document.getElementById('home');
                     if (heroSection) {
                         heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.15), rgba(255,255,255,0.25)), url(${imageData.url})`;
                         heroSection.style.backgroundSize = 'cover';
                         heroSection.style.backgroundPosition = 'center';
-                        heroSection.style.backgroundAttachment = 'fixed';
+                        heroSection.style.backgroundAttachment = attachment;
                     }
 
                     document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.15), rgba(255,255,255,0.25)), url(${imageData.url})`;
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
-                    document.body.style.backgroundAttachment = 'fixed';
+                    document.body.style.backgroundAttachment = attachment;
 
                     this.addImageCredit(imageData);
                 };
